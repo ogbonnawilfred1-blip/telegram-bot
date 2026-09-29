@@ -57,6 +57,7 @@ import {
   isAdminPayload,
   shortAddress,
   sortEvents,
+  summarizePayloadForLog,
   type ContractSource,
   type DecodedEvent,
 } from "./decode.js";
@@ -561,14 +562,6 @@ function summarize(event: DecodedEvent): string {
   }
 }
 
-function boundedJson(value: unknown): string {
-  return JSON.stringify(value, (_key, item) => {
-    if (typeof item !== "string") return typeof item === "bigint" ? item.toString() : item;
-    const compact = item.replace(/\s+/g, " ").trim();
-    return compact.length <= 240 ? compact : `${compact.slice(0, 239)}…`;
-  });
-}
-
 async function main(): Promise<void> {
   // `--mock` opts into the local mock profile before config is read. An
   // explicit MIMIR_PROFILE in the environment still wins; blank counts as unset.
@@ -641,9 +634,7 @@ async function main(): Promise<void> {
     for (const event of show > 0 ? scan.events.slice(-show) : []) {
       console.log(`\n  ledger ${event.ledger}  tx ${event.txHash}`);
       console.log(`  ${summarize(event)}`);
-      console.log(
-        `  ${boundedJson(event.payload)}`,
-      );
+      console.log(`  ${summarizePayloadForLog(event.payload)}`);
     }
   }
 
